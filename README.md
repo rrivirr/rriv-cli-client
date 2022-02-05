@@ -2,6 +2,6 @@
 CLI client for RRIV
 
 # building
-sudo apt install libserial-dev
-sudo apt install cmake
-./compile.sh
+1. sudo apt install libserial-dev
+2. sudo apt install cmake
+3. ./compile.sh
