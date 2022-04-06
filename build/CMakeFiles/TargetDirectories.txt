@@ -1,3 +1,0 @@
-/home/zaven/software-development/Water/libserial/examples/example_project/build/CMakeFiles/rebuild_cache.dir
-/home/zaven/software-development/Water/libserial/examples/example_project/build/CMakeFiles/edit_cache.dir
-/home/zaven/software-development/Water/libserial/examples/example_project/build/CMakeFiles/ExampleProject.dir

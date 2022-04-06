@@ -7,20 +7,60 @@
 
 #include <iostream>
 #include <cstring>
+#include "Cmd.h"
+
+LibSerial::SerialStream serial_stream ;
+
+
+void help(int arg_cnt, char**args)
+{
+  char commands[] = "Command List:\n"
+  "version\n"
+  "show-warranty\n"
+  "get-config\n"
+  "set-config\n"
+  "set-slot-config\n"
+  "clear-slot\n"
+  "set-rtc\n"
+  "get-rtc\n"
+  "restart\n"
+  "set-site-name\n"
+  "set-deployment-identifier\n"
+  "set-interval\n"
+  "set-burst-number\n"
+  "set-start-up-delay\n"
+  "set-burst-delay\n"
+  "calibrate\n"
+  "set-user-note\n"
+  "set-user-value\n"
+  "start-logging\n"
+  "deploy-now\n"
+  "interactive\n"
+  "trace\n"
+  "check-memory\n"
+  "scan-ic2\n";
+
+  std::cout << commands << std::endl;
+}
+
+void relay(int arg_cnt, char **args)
+{
+    for(int i=0; i< arg_cnt; i++)
+    {
+        serial_stream << args[i];
+    }
+    serial_stream << std::endl;
+}
+
 
 int main()
 {
-    using LibSerial::SerialPort ;
-    using LibSerial::SerialStream ;
+    
+    char port[50] = "/dev/ttyACM0";
+    std::cout << "opening " << port << std::endl;
 
-    // You can instantiate a Serial Port or a Serial Stream object, whichever you'd prefer to work with.
-    // For this example, we will demonstrate by using both types of objects.
-    SerialPort serial_port ;
-    SerialStream serial_stream ;
-
-    // Open hardware serial ports using the Open() method.
-    // serial_port.Open( "/dev/ttyACM0" ) ;
-    serial_stream.Open( "/dev/ttyACM0" ) ;
+    serial_stream.Open( port ) ;
+    std::cout << "opened" << std::endl;
 
     // Set the baud rates.
     using LibSerial::BaudRate ;
@@ -39,51 +79,40 @@ int main()
 
     char buffer[200];
 
+    std::cout << "connecting" << std::endl;
+
+    cmdInit(&std::cin, &std::cout);
+    cmdAdd("help", help);
+    cmdAdd("relay", relay);
+
+
     // With SerialStream objects you can read/write to the port using iostream operators.
-    while(strcmp(buffer, "CMD >> ") != 0)
+    while(true)
     {
-        serial_stream.getline(buffer, 100);
+        serial_stream.getline(buffer, 200, '\a');
         if(strlen(buffer) > 0)
         {
-            std::cout << "> " << buffer << std::endl ;
+            std::cout << ".> " << buffer << std::endl ;
         }
+        
+        cmdPoll();
+
+        // if(strcmp(buffer, "\u200B\u200B\u200B\u200B\r") == 0)
+        // {
+        //     std::cout << "will read" << std::endl;
+        //     std::cin.getline(buffer, 200);
+        //     std::cout << "did read" << std::endl;
+        //     // if(strlen(wbuffer) > 0)
+        //     // {
+        //         std::cout << "done read" << std::endl;
+        //         std::cout << buffer << std::endl;
+        //     // }
+        //     // else
+        //     // {
+        //         std::cout << "gotnothing" << std::endl;
+        //     // }
+        // }
+   
     }
-    std::cout << "> " << buffer << std::endl ;
-    // std::cin.getline
-
-    std::cout << "sending" << std::endl;
-    // serial_stream << "help\r" << std::endl; ;
-
-    // // Specify a timeout value (in milliseconds).
-    // size_t timeout_milliseconds = 25 ;
-
-    // using LibSerial::ReadTimeout ;
-    // try
-    // {
-    //     // Read a byte from the serial port using SerialPort Read() methods.
-    //     // serial_port.ReadByte(read_byte_1, timeout_milliseconds) ;
-
-    //     // With SerialStream objects you can read/write to the port using iostream operators.
-    //     std::cout << "getting" << std::endl;
-    //     while(strcmp(buffer, "CMD> ") != 0)
-    //     {
-    //         serial_stream.getline(buffer, 100);
-    //         std::cout << "> " << buffer << std::endl ;
-    //     }
-    //     std::cout << "> " << buffer << std::endl ;
-
-    // }
-    // catch (const ReadTimeout&)
-    // {
-    //     std::cerr << "The Read() call has timed out." << std::endl ;
-    // }
-    
-    std::cout << "got" << std::endl;
-
-    // std::cout << "serial_port read:   " << read_byte_1 << std::endl ;
-    std::cout << "> " << buffer << std::endl ;
-
-    // Close the Serial Port and Serial Stream.
-    // serial_port.Close() ;
     serial_stream.Close() ;
 }
