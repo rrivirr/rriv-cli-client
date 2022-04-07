@@ -106,6 +106,8 @@ void cmd_parse(char *cmd)
     char buf[50];
     cmd_t *cmd_entry;
 
+    *outStream << "parsing" << std::endl;
+
     fflush(stdout);
 
     // parse the command line statement and break it up into space-delimited
@@ -121,6 +123,7 @@ void cmd_parse(char *cmd)
 
     // parse the command table for valid command. used argv[0] which is the
     // actual command name typed in at the prompt
+    *outStream << argv[0] << std::endl;
     for (cmd_entry = cmd_tbl; cmd_entry != NULL; cmd_entry = cmd_entry->next)
     {
         if (!strcmp(argv[0], cmd_entry->cmd))
@@ -167,6 +170,7 @@ void cmd_handler()
         // terminate the msg and reset the msg ptr. then send
         // it to the handler for processing.
         *msg_ptr = '\0';
+        *outStream << "ok";
         *outStream << std::endl;
         cmd_parse((char *)msg);
         msg_ptr = msg;
@@ -201,11 +205,21 @@ void cmd_handler()
 */
 /**************************************************************************/
 void cmdPoll()
-{
-    while (inStream->peek())
+{   
+    // *outStream << inStream->rdbuf()->in_avail()  << std::endl;
+    while (inStream->rdbuf()->in_avail() > 0)
     {
+        *outStream << inStream->peek() << "uh" << std::endl;
+        char c;
+        // inStream->read(&c, 1);
+        // *outStream << c << "ok" << std::endl;
         cmd_handler();
+
+        *outStream << inStream->rdbuf()->in_avail()  << std::endl;
+
     }
+    // *outStream << "no poll" << std::endl;
+
 }
 
 /**************************************************************************/

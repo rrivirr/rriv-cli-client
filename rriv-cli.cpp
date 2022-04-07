@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cstring>
 #include "lib/Cmd.h"
+#include <unistd.h>
 
 LibSerial::SerialStream serial_stream ;
 
@@ -55,7 +56,9 @@ void relay(int arg_cnt, char **args)
 
 int main()
 {
-    
+    std::cin.sync_with_stdio(false);
+    // serial_stream.sync_with_stdio(false);
+
     char port[50] = "/dev/ttyACM0";
     std::cout << "opening " << port << std::endl;
 
@@ -64,18 +67,7 @@ int main()
 
     // Set the baud rates.
     using LibSerial::BaudRate ;
-    // serial_port.SetBaudRate( BaudRate::BAUD_115200 ) ;
     serial_stream.SetBaudRate( BaudRate::BAUD_115200 ) ;
-
-    // Create a few variables with data we can send.
-    char write_byte_1 = 'a' ;
-    char write_byte_2 = 'b' ;
-
-    char read_byte_1 = 'A' ;
-    char read_byte_2 = 'B' ;
-
-    // Read a byte to the serial port using SerialPort Write() methods.
-    // serial_port.WriteByte(write_byte_1) ;
 
     char buffer[200];
 
@@ -85,16 +77,37 @@ int main()
     cmdAdd("help", help);
     cmdAdd("relay", relay);
 
+    std::cout << "cmd ready" << std::endl;
 
     // With SerialStream objects you can read/write to the port using iostream operators.
     while(true)
     {
-        serial_stream.getline(buffer, 200, '\a');
-        if(strlen(buffer) > 0)
+
+        while (serial_stream.rdbuf()->in_avail() > 0)
         {
-            std::cout << ".> " << buffer << std::endl ;
+
+            // serial_stream.getline(buffer, 200, '\r');
+            std::streamsize size = 6;
+            std::cout << serial_stream.rdbuf()->in_avail()  << std::endl;
+
+            if(serial_stream.rdbuf()->in_avail() < size)
+            {
+                size = serial_stream.rdbuf()->in_avail();
+            }
+            std::cout << size  << std::endl;
+
+            serial_stream.get(buffer, size) ;
+            buffer[size] = '\0';
+
+            // if (strlen(buffer) > 0)
+            // {
+                std::cout << ".> " << strlen(buffer) << buffer << std::endl;
+            // }    
+
+            usleep(1000);
+
         }
-        
+
         cmdPoll();
 
         // if(strcmp(buffer, "\u200B\u200B\u200B\u200B\r") == 0)
@@ -112,7 +125,7 @@ int main()
         //         std::cout << "gotnothing" << std::endl;
         //     // }
         // }
-   
+        usleep(100000);
     }
     serial_stream.Close() ;
 }
