@@ -166,6 +166,7 @@ void cmd_handler()
 
     switch (c)
     {
+    case '\n':
     case '\r':
         // terminate the msg and reset the msg ptr. then send
         // it to the handler for processing.
@@ -176,10 +177,11 @@ void cmd_handler()
         msg_ptr = msg;
         break;
 
-    case '\n':
-        // ignore newline characters. they usually come in pairs
-        // with the \r characters we use for newline detection.
-        break;
+    // case '\n':
+    //     // ignore newline characters. they usually come in pairs
+    //     // with the \r characters we use for newline detection.
+    //     *outStream << "slash n" << std::endl;
+    //     break;
 
     case '\b':
         // backspace
@@ -192,7 +194,7 @@ void cmd_handler()
 
     default:
         // normal character entered. add it to the buffer
-        *outStream << c;
+        // *outStream << c;
         *msg_ptr++ = c;
         break;
     }
@@ -209,13 +211,13 @@ void cmdPoll()
     // *outStream << inStream->rdbuf()->in_avail()  << std::endl;
     while (inStream->rdbuf()->in_avail() > 0)
     {
-        *outStream << inStream->peek() << "uh" << std::endl;
-        char c;
+        // *outStream << inStream->peek() << "uh" << std::endl;
+        // char c;
         // inStream->read(&c, 1);
         // *outStream << c << "ok" << std::endl;
         cmd_handler();
 
-        *outStream << inStream->rdbuf()->in_avail()  << std::endl;
+        // *outStream << inStream->rdbuf()->in_avail()  << std::endl;
 
     }
     // *outStream << "no poll" << std::endl;

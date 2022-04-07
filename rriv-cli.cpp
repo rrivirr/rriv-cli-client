@@ -10,8 +10,7 @@
 #include "lib/Cmd.h"
 #include <unistd.h>
 
-LibSerial::SerialStream serial_stream ;
-
+LibSerial::SerialPort serial_port ;
 
 void help(int arg_cnt, char**args)
 {
@@ -48,26 +47,26 @@ void relay(int arg_cnt, char **args)
 {
     for(int i=0; i< arg_cnt; i++)
     {
-        serial_stream << args[i];
+        // serial_ << args[i];
     }
-    serial_stream << std::endl;
+    // serial_stream << std::endl;
 }
 
 
 int main()
 {
     std::cin.sync_with_stdio(false);
-    // serial_stream.sync_with_stdio(false);
+
 
     char port[50] = "/dev/ttyACM0";
     std::cout << "opening " << port << std::endl;
 
-    serial_stream.Open( port ) ;
+    serial_port.Open( port ) ;
     std::cout << "opened" << std::endl;
 
     // Set the baud rates.
     using LibSerial::BaudRate ;
-    serial_stream.SetBaudRate( BaudRate::BAUD_115200 ) ;
+    serial_port.SetBaudRate( BaudRate::BAUD_115200 ) ;
 
     char buffer[200];
 
@@ -79,30 +78,35 @@ int main()
 
     std::cout << "cmd ready" << std::endl;
 
+
+    std::string resetCommand = "restart\r\n";
+    LibSerial::DataBuffer resetCommandBuffer(resetCommand.begin(), resetCommand.end());
+
+    for (char i: resetCommandBuffer)
+        std::cout << i;
+    std::cout.flush();
+
+    serial_port.Write(resetCommandBuffer);
+
+
+    LibSerial::DataBuffer dataBuffer;
+
     // With SerialStream objects you can read/write to the port using iostream operators.
     while(true)
     {
-
-        while (serial_stream.rdbuf()->in_avail() > 0)
-        {
-
-            // serial_stream.getline(buffer, 200, '\r');
-            std::streamsize size = 6;
-            std::cout << serial_stream.rdbuf()->in_avail()  << std::endl;
-
-            if(serial_stream.rdbuf()->in_avail() < size)
-            {
-                size = serial_stream.rdbuf()->in_avail();
+        while(serial_port.IsDataAvailable()){
+            try {
+                serial_port.Read(dataBuffer, 200, 10);
             }
-            std::cout << size  << std::endl;
+            catch (const std::exception&) { /* */ }
 
-            serial_stream.get(buffer, size) ;
-            buffer[size] = '\0';
-
-            // if (strlen(buffer) > 0)
-            // {
-                std::cout << ".> " << strlen(buffer) << buffer << std::endl;
-            // }    
+            if(dataBuffer.size() > 0)
+            {
+                // std::cout << ".> ";
+                for (char i: dataBuffer)
+                    std::cout << i;
+                std::cout.flush();
+            }    
 
             usleep(1000);
 
@@ -127,5 +131,5 @@ int main()
         // }
         usleep(100000);
     }
-    serial_stream.Close() ;
+    serial_port.Close() ;
 }
