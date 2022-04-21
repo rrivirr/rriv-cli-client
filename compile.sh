@@ -6,4 +6,4 @@ cd ..
 make -C build
 
 #echo "Running executable"
-#./build/ExampleProject
+#./build/rriv-cli

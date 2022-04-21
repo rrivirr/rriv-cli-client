@@ -85,8 +85,8 @@ void cmd_display()
 
     *outStream << std::endl;
 
-    strcpy(buf, cmd_banner);
-    *outStream << buf << std::endl;
+    // strcpy(buf, cmd_banner);
+    // *outStream << buf << std::endl;
 
     strcpy(buf, cmd_prompt);
     *outStream << buf << std::endl;
@@ -106,20 +106,25 @@ void cmd_parse(char *cmd)
     char buf[50];
     cmd_t *cmd_entry;
 
-    *outStream << "parsing" << std::endl;
-
     fflush(stdout);
 
     // parse the command line statement and break it up into space-delimited
     // strings. the array of strings will be saved in the argv array.
     argv[i] = strtok(cmd, " ");
+
     do
     {
         argv[++i] = strtok(NULL, " ");
+
     } while ((i < 30) && (argv[i] != NULL));
 
     // save off the number of arguments for the particular command.
     argc = i;
+    if(argv[0] == nullptr)
+    {
+        cmd_display();
+        return;
+    }
 
     // parse the command table for valid command. used argv[0] which is the
     // actual command name typed in at the prompt
@@ -139,7 +144,7 @@ void cmd_parse(char *cmd)
     // *outStream << buf << std::endl;
 
     // not recognized as a local command, hand off to the datalogger
-      for (cmd_entry = cmd_tbl; cmd_entry != NULL; cmd_entry = cmd_entry->next)
+    for (cmd_entry = cmd_tbl; cmd_entry != NULL; cmd_entry = cmd_entry->next)
     {
         if (!strcmp("relay", cmd_entry->cmd))
         {
@@ -171,8 +176,8 @@ void cmd_handler()
         // terminate the msg and reset the msg ptr. then send
         // it to the handler for processing.
         *msg_ptr = '\0';
-        *outStream << "ok";
-        *outStream << std::endl;
+        // *outStream << "ok";
+        // *outStream << std::endl;
         cmd_parse((char *)msg);
         msg_ptr = msg;
         break;
