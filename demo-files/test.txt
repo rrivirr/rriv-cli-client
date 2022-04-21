@@ -1,0 +1,2 @@
+set-user-note hello:set-user-note hello
+set-site-name oksite:set-site-name oksite

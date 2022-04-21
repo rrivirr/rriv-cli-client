@@ -12,10 +12,13 @@
 #include <ctime>
 #include <sstream>
 #include <fstream>
+#include <regex>
 
 LibSerial::SerialPort serial_port ;
 bool processingCommandFile = false;
+bool processingTestFile = false;
 std::ifstream commandFile;
+std::string testResult;
 
 void help(int arg_cnt, char**args)
 {
@@ -66,6 +69,54 @@ void runFile(int arg_cnt, char **args)
     commandFile = std::ifstream(args[1]);
 }
 
+void runTest(int arg_cnt, char **args)
+{
+    processingCommandFile = true;
+    processingTestFile = true;
+    commandFile = std::ifstream(args[1]);
+}
+
+void loadSlotFromFile(int arg_cnt, char **args)
+{
+    std::ifstream slotFile(args[1]);
+    // read and remove all return characters
+    std::string slotSettings;
+    std::string line;
+    while(std::getline(slotFile, line))
+    {
+        line.erase( std::remove(line.begin(), line.end(), '\r'), line.end());
+        line.erase( std::remove(line.begin(), line.end(), '\n'), line.end());
+        line.erase( std::remove(line.begin(), line.end(), ' '), line.end());
+        slotSettings = slotSettings + line;
+    }
+    std::string command = "set-slot-config " + slotSettings;
+    std::cout << command << std::endl;
+    cmdRun(command.c_str());
+    slotFile.close();
+}
+
+void loadConfigFromFile(int arg_cnt, char **args)
+{
+    std::ifstream configFile(args[1]);
+    // read and remove all return characters
+    std::string config;
+    std::string line;
+    while(std::getline(configFile, line))
+    {
+        line.erase( std::remove(line.begin(), line.end(), '\r'), line.end());
+        line.erase( std::remove(line.begin(), line.end(), '\n'), line.end());
+        line.erase( std::remove(line.begin(), line.end(), ' '), line.end());
+        config = config + line;
+    }
+    std::string command = "set-config " + config;
+    std::cout << command << std::endl;
+    cmdRun(command.c_str());
+    configFile.close();
+}
+
+
+
+
 void relay(int arg_cnt, char **args)
 {
     for(int i=0; i< arg_cnt; i++)
@@ -109,9 +160,9 @@ int main()
     cmdAdd("help", help);
     cmdAdd("set-rtc", setRTC);
     cmdAdd("run-file", runFile);
-    // cmdAdd("run-test", runTest);
-    // cmdAdd("load-settings", loadSettingsFromFile);
-    // cmdAdd("load-slot", loadSlotFromFile);
+    cmdAdd("run-test", runTest);
+    cmdAdd("load-config", loadConfigFromFile);
+    cmdAdd("load-slot-config", loadSlotFromFile);
     cmdAdd("relay", relay);
 
     std::cout << "cmd ready" << std::endl;
@@ -131,24 +182,36 @@ int main()
 
 
 
-    LibSerial::DataBuffer dataBuffer;
+    std::string readString;
 
     // With SerialStream objects you can read/write to the port using iostream operators.
     while(true)
     {
         while(serial_port.IsDataAvailable()){
             try {
-                serial_port.Read(dataBuffer, 200, 10);
+                serial_port.Read(readString, 200, 10);
             }
             catch (const std::exception&) { /* */ }
 
-            if(dataBuffer.size() > 0)
+            if(readString.size() > 0)
             {
-                // std::cout << ".> ";
-                for (char i: dataBuffer)
-                    std::cout << i;
-                std::cout.flush();
-            }    
+                // use a standard replace code to remove the prompt sent by the peripheral
+                //  readString = std::replace(readString, std::string("CMD >> "), std::string("") );
+                //readString.replace("CMD >> ", "");
+                std::cout << readString << std::endl;
+            }   
+
+            if(processingTestFile)
+            {
+                if(readString == testResult)
+                {
+                    std::cout << "Test Success!" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Test Failed!" << std::endl;
+                }
+            } 
 
             usleep(1000);
 
@@ -159,8 +222,21 @@ int main()
             std::string line;
             if(std::getline(commandFile, line))
             {
-                // serial_port.Write(line + "\r\n"); // instead pass through Cmd.cpp somehow
-                cmdRun(line.c_str());
+                if(processingTestFile)
+                {
+                    std::stringstream check1(line);
+                    std::string intermediate;
+                    std::getline(check1, intermediate, ':');
+                    std::string command = intermediate;
+                    std::getline(check1, intermediate, ':');
+                    testResult = intermediate;
+                    cmdRun(command.c_str());
+                }
+                else
+                {
+                    // serial_port.Write(line + "\r\n"); // instead pass through Cmd.cpp somehow
+                    cmdRun(line.c_str());   
+                }
             }
             else
             {

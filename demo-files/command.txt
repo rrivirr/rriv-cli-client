@@ -1,0 +1,5 @@
+set-rtc
+set-user-note hello
+set-site-name oksite
+get-rtc
+get-config
