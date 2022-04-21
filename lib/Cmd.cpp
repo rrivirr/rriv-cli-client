@@ -229,6 +229,12 @@ void cmdPoll()
 
 }
 
+void cmdRun(const char * command)
+{
+    cmd_parse( (char * ) command);
+}
+
+
 /**************************************************************************/
 /*!
     Initialize the command line interface. This sets the terminal speed and

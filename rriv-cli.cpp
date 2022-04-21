@@ -159,7 +159,8 @@ int main()
             std::string line;
             if(std::getline(commandFile, line))
             {
-                serial_port.Write(line + "\r\n"); // instead pass through Cmd.cpp somehow
+                // serial_port.Write(line + "\r\n"); // instead pass through Cmd.cpp somehow
+                cmdRun(line.c_str());
             }
             else
             {
