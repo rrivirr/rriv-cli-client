@@ -13,6 +13,11 @@
 #include <sstream>
 #include <fstream>
 #include <regex>
+#include <filesystem>
+#include <dirent.h>
+
+using namespace std;
+
 
 LibSerial::SerialPort serial_port ;
 bool processingCommandFile = false;
@@ -132,12 +137,77 @@ void relay(int arg_cnt, char **args)
 }
 
 
+vector<string> list_dir(const char *path, const char *match)
+{
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+
+    vector<string> list = vector<string>();
+    if (dir == NULL)
+    {
+        return list;
+    }
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (match == NULL)
+        {
+            list.push_back(entry->d_name);
+        }
+        else
+        {
+            regex str_expr(match);
+            if (regex_match(entry->d_name, str_expr))
+                list.push_back(entry->d_name);
+        }
+
+    }
+    closedir(dir);
+    return list;
+}
+
+vector<string> list_dir(const char *path)
+{
+    return list_dir(path, NULL);
+}
+
+
 int main()
 {
-    std::cin.sync_with_stdio(false);
+    string port("/dev/*");
+    bool deviceSelected = false;
+    bool waitForDevice = false;
 
+    while (!deviceSelected)
+    {
 
-    char port[50] = "/dev/ttyACM0";
+        vector<string> list = list_dir("/dev", "ttyACM.*");
+        int i = 1;
+        for (const auto &value : list)
+        {
+            cout << i << ") " << value << "\n";
+        }
+
+        if (list.size() == 0)
+        {
+            if(!waitForDevice)
+            {
+                cout << "No RRIV devices found." << endl;
+                cout << "Please plug in a RRIV device." << endl;
+                waitForDevice = true;
+            }
+            sleep(1);
+        }
+
+        if (list.size() == 1)
+        {
+            port = (string("/dev/") + list.at(0)).c_str();
+            cout << "Automatically connecting to /dev/" + list.at(0) << endl;
+            deviceSelected = true;
+        }
+    }
+
+    std::cin.sync_with_stdio(false);    using namespace std;
+
     std::cout << "opening " << port << std::endl;
 
     serial_port.Open( port ) ;
@@ -167,28 +237,52 @@ int main()
 
     std::cout << "cmd ready" << std::endl;
 
-
-    // std::string resetCommand = "restart\r\n";
-    // LibSerial::DataBuffer resetCommandBuffer(resetCommand.begin(), resetCommand.end());
-
-    // for (char i: resetCommandBuffer)
-    //     std::cout << i;
-    // std::cout.flush();
-
-    // serial_port.Write(resetCommandBuffer);
-
     serial_port.Write("restart\r\n");
     serial_port.DrainWriteBuffer();
 
-
-
+    
+    bool interfaceReady = false;
     std::string readString;
 
-    // With SerialStream objects you can read/write to the port using iostream operators.
+    // wait for prompt
+    while(!interfaceReady)
+    {
+        while (serial_port.IsDataAvailable())
+        {
+
+            try
+            {
+                serial_port.ReadLine(readString);
+            }
+            catch (const std::exception &)
+            { /* */
+            }
+
+            if(readString == "CMD >> ")
+            {
+                // serial_port.Write("no-prompt\r\n"); // place into relay mode
+                // serial_port.DrainWriteBuffer();
+
+                interfaceReady = true;
+            }
+
+            if (readString.size() > 0)
+            {
+                std::cout << ">";
+                std::cout << readString;
+                std::cout.flush();
+            }
+
+   
+        }
+    }
+
     while(true)
     {
         while(serial_port.IsDataAvailable()){
-            try {
+
+            try 
+            {
                 serial_port.Read(readString, 200, 10);
             }
             catch (const std::exception&) { /* */ }
@@ -198,8 +292,10 @@ int main()
                 // use a standard replace code to remove the prompt sent by the peripheral
                 //  readString = std::replace(readString, std::string("CMD >> "), std::string("") );
                 //readString.replace("CMD >> ", "");
-                std::cout << readString << std::endl;
+                std::cout << readString;
+                std::cout.flush();
             }   
+
 
             if(processingTestFile)
             {
