@@ -204,6 +204,16 @@ int main()
             cout << "Automatically connecting to /dev/" + list.at(0) << endl;
             deviceSelected = true;
         }
+
+        if(list.size() > 1)
+        {
+            cout << "Please select port to connect to" << endl;
+            int portIndex;
+            cin >> portIndex;
+            port = (string("/dev/") + list.at(portIndex)).c_str();
+            cout << "Cnnecting to /dev/" + list.at(0) << endl;
+            deviceSelected = true;
+        }
     }
 
     std::cin.sync_with_stdio(false);    using namespace std;
