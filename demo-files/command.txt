@@ -1,5 +1,7 @@
+echo 'welcome to the set-rtc workflow tutorial!  this is a great day.'
 set-rtc
 set-user-note hello
 set-site-name oksite
+load-slot-config demo-files/slot-config.json
 get-rtc
 get-config

@@ -5,3 +5,6 @@ CLI client for RRIV
 1. sudo apt install libserial-dev
 2. sudo apt install cmake
 3. ./compile.sh
+
+# running
+./build/rriv-cli

@@ -143,13 +143,13 @@ void cmd_parse(char *cmd)
     // strcpy(buf, cmd_unrecog);
     // *outStream << buf << std::endl;
 
-    // not recognized as a local command, hand off to the datalogger
+    // not recognized as a client side command, hand off to the datalogger
     for (cmd_entry = cmd_tbl; cmd_entry != NULL; cmd_entry = cmd_entry->next)
     {
         if (!strcmp("relay", cmd_entry->cmd))
         {
             cmd_entry->func(argc, argv);
-            cmd_display();
+            // cmd_display();
             return;
         }
     }
