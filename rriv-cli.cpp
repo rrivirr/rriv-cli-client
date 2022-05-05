@@ -331,10 +331,10 @@ int main(int argc, char *argv[])
     while (true)
     {
         int result = ensureDeviceConnected();
-        if(result == 2)
-        {   
-            cmdRun((std::string("run-workflow") + std::string(argv[1])).c_str());
-        }
+        // if(result == 2)
+        // {   
+        //     cmdRun((std::string("run-workflow") + std::string(argv[1])).c_str());
+        // }
 
         usleep(1000);
 
