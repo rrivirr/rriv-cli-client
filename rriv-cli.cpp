@@ -15,6 +15,8 @@
 #include <regex>
 #include <filesystem>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "include/filesystem.hpp"
 
 using namespace std;
@@ -122,6 +124,103 @@ void loadConfigFromFile(int arg_cnt, char **args)
     cmdRun(command.c_str());
     configFile.close();
 }
+
+void pullData(int arg_cnt, char **args)
+{
+    serial_port->Write("pull-data \r\n");
+    serial_port->DrainWriteBuffer();
+
+    std::string readString;
+    std::ofstream outputFile;;
+    // while (serial_port->IsDataAvailable())
+    bool inFile = false;
+    while(true)
+    {
+        try
+        {
+            serial_port->ReadLine(readString, '\n', 1000);
+            cout << readString << endl;
+            // check line for delim
+            std::stringstream check(readString);
+            if (readString.find('`') != std::string::npos) { // end of transmission delim
+                cout << "Data pull complete!" << endl;
+                break;
+            }
+
+            if(!inFile)
+            {
+                if (readString.find(':') == std::string::npos) {
+                    continue; // ignore any logging or command loopback
+                }
+
+                std::string filepath;
+                getline(check, filepath, ':');
+                std::stringstream checkDir(filepath);
+                std::string directory;
+                getline(checkDir, directory, '/');
+                
+                struct stat st = {0};
+
+                std::string storageDirectory = "data/" + directory;
+                if (stat(storageDirectory.c_str(), &st) == -1)
+                {
+                    mkdir(storageDirectory.c_str(), 0700);
+                }
+
+                std::string localFilePath = "data/" + filepath;
+                if (stat(localFilePath.c_str(), &st) != -1)
+                {
+                    cout << "Data file already pulled: " << filepath << endl;
+                    // in this case, skip the file
+                    bool skippedFile = false;
+                    while(!skippedFile)
+                    {
+                        serial_port->ReadLine(readString, '\n', 300);
+                        cout << readString << endl;
+                        if (readString.find(';') != std::string::npos) {
+                            skippedFile = true;
+                        }
+                    }
+                    continue;
+                }
+
+                outputFile = std::ofstream(localFilePath);
+                std::string headers;
+                getline(check, headers, ':');
+                outputFile << headers;
+                inFile = true;
+                cout << "in file" << localFilePath << endl;
+                continue;
+            }
+            else
+            {   
+                if (readString.find(';') != std::string::npos) {
+                    // end of file
+                    outputFile.close();
+                    inFile = false;
+                    // cout << "end file" << endl;
+                }
+                continue;
+            }
+            
+        }
+        catch (const std::exception &exc)
+        {
+            std::cerr << exc.what();
+
+            if (strcmp(exc.what(), "Read timeout") == 0)
+            {
+                break;
+            }
+        }
+
+        if (readString.size() > 0)
+        {
+            outputFile << readString;
+        }
+    }
+}
+
 
 void relay(int arg_cnt, char **args)
 {
@@ -322,6 +421,7 @@ int main(int argc, char *argv[])
     cmdAdd("run-test", runTest);
     cmdAdd("load-config", loadConfigFromFile);
     cmdAdd("load-slot-config", loadSlotFromFile);
+    cmdAdd("pull-data", pullData);
     cmdAdd("relay", relay);
     cmdAdd("echo", echo);
 
@@ -331,6 +431,10 @@ int main(int argc, char *argv[])
     while (true)
     {
         int result = ensureDeviceConnected();
+        if(result < 0)
+        {
+            continue;
+        }
         // if(result == 2)
         // {   
         //     cmdRun((std::string("run-workflow") + std::string(argv[1])).c_str());
@@ -351,7 +455,7 @@ int main(int argc, char *argv[])
                 {
                     continue;
                 }
-                std::cerr << exc.what();
+                // std::cerr << exc.what();
             }
 
             // readString = string("CMD >>\r");
