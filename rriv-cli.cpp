@@ -139,7 +139,7 @@ void pullData(int arg_cnt, char **args)
         try
         {
             serial_port->ReadLine(readString, '\n', 1000);
-            cout << readString << endl;
+            // cout << readString << endl;
             // check line for delim
             std::stringstream check(readString);
             if (readString.find('`') != std::string::npos) { // end of transmission delim
@@ -176,7 +176,7 @@ void pullData(int arg_cnt, char **args)
                     while(!skippedFile)
                     {
                         serial_port->ReadLine(readString, '\n', 300);
-                        cout << readString << endl;
+                        // cout << readString << endl;
                         if (readString.find(';') != std::string::npos) {
                             skippedFile = true;
                         }
@@ -189,7 +189,7 @@ void pullData(int arg_cnt, char **args)
                 getline(check, headers, ':');
                 outputFile << headers;
                 inFile = true;
-                cout << "in file" << localFilePath << endl;
+                // cout << "in file" << localFilePath << endl;
                 continue;
             }
             else
