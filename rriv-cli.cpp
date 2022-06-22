@@ -134,11 +134,12 @@ void pullData(int arg_cnt, char **args)
     std::ofstream outputFile;;
     // while (serial_port->IsDataAvailable())
     bool inFile = false;
+    int timeout = 5000;
     while(true)
     {
         try
         {
-            serial_port->ReadLine(readString, '\n', 1000);
+            serial_port->ReadLine(readString, '\n', timeout);
             // cout << readString << endl;
             // check line for delim
             std::stringstream check(readString);
@@ -175,7 +176,7 @@ void pullData(int arg_cnt, char **args)
                     bool skippedFile = false;
                     while(!skippedFile)
                     {
-                        serial_port->ReadLine(readString, '\n', 300);
+                        serial_port->ReadLine(readString, '\n', timeout);
                         // cout << readString << endl;
                         if (readString.find(';') != std::string::npos) {
                             skippedFile = true;
@@ -376,7 +377,7 @@ int ensureDeviceConnected()
         std::cout << "opening" << std::endl;
         serial_port->Open(devicePort);
 
-        // serial_port->SetBaudRate(BaudRate::BAUD_115200);
+        serial_port->SetBaudRate(BaudRate::BAUD_921600);
         // serial_port->SetCharacterSize(CharacterSize::CHAR_SIZE_8);
         // serial_port->SetFlowControl(FlowControl::FLOW_CONTROL_NONE);
         // serial_port->SetParity(Parity::PARITY_NONE);
