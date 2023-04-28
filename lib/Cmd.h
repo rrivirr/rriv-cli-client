@@ -78,5 +78,6 @@ void cmdAdd(const char *name, void (*func)(int argc, char **argv));
 void cmdRun(const char * command);
 std::istream* cmdGetStream(void);
 uint32_t cmdStr2Num(char *str, uint8_t base);
+void cmdList();
 
 #endif //CMD_H

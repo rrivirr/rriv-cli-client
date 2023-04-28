@@ -30,33 +30,11 @@ std::string testResult;
 
 void help(int arg_cnt, char **args)
 {
-    char commands[] = "Command List:\n"
-                      "version\n"
-                      "show-warranty\n"
-                      "get-config\n"
-                      "set-config\n"
-                      "set-slot-config\n"
-                      "clear-slot\n"
-                      "set-rtc\n"
-                      "get-rtc\n"
-                      "restart\n"
-                      "set-site-name\n"
-                      "set-deployment-identifier\n"
-                      "set-interval\n"
-                      "set-burst-number\n"
-                      "set-start-up-delay\n"
-                      "set-burst-delay\n"
-                      "calibrate\n"
-                      "set-user-note\n"
-                      "set-user-value\n"
-                      "start-logging\n"
-                      "deploy-now\n"
-                      "interactive\n"
-                      "trace\n"
-                      "check-memory\n"
-                      "scan-ic2\n";
-
-    std::cout << commands << std::endl;
+    cout << "CLI-Client Command List:" << endl;
+    cmdList();
+    
+    serial_port->Write("help\r\n");
+    serial_port->DrainWriteBuffer();
 }
 
 void setRTC(int arg_cnt, char **args)
@@ -69,6 +47,19 @@ void setRTC(int arg_cnt, char **args)
     timeStringStream << time;
 
     serial_port->Write("set-rtc " + timeStringStream.str() + "\r\n");
+    serial_port->DrainWriteBuffer();
+}
+
+void getRTC(int arg_cnt, char **args)
+{
+    performingRelay = true;
+    std::time_t time = std::time(nullptr);
+    //std::cout << asctime(std::localtime(&time)) << time << std::endl;
+
+    std::stringstream timeStringStream;
+    timeStringStream << time;
+
+    serial_port->Write("get-rtc " + timeStringStream.str() + "\r\n");
     serial_port->DrainWriteBuffer();
 }
 
@@ -125,7 +116,7 @@ void loadConfigFromFile(int arg_cnt, char **args)
 
 void relay(int arg_cnt, char **args)
 {
-    cout << "relay" << endl;
+    // cout << "relay" << endl;
     performingRelay = true;
     for (int i = 0; i < arg_cnt; i++)
     {
@@ -136,7 +127,7 @@ void relay(int arg_cnt, char **args)
         }
     }
     serial_port->Write("\r\n");
-    cout << "sent" << endl;
+    // cout << "sent" << endl;
 }
 
 void echo(int arg_cnt, char ** args)
@@ -283,7 +274,7 @@ int ensureDeviceConnected()
         // serial_port->SetParity(Parity::PARITY_NONE);
         // serial_port->SetStopBits(StopBits::STOP_BITS_1);
 
-        serial_port->Write("restart\r\n");
+        // serial_port->Write("restart\r\n");
         serial_port->DrainWriteBuffer();
     }
     catch (const std::exception &exc)
@@ -318,6 +309,7 @@ int main(int argc, char *argv[])
     cmdInit(&std::cin, &std::cout);
     cmdAdd("help", help);
     cmdAdd("set-rtc", setRTC);
+    cmdAdd("get-rtc", getRTC);
     cmdAdd("run-workflow", runWorkflow);
     cmdAdd("run-test", runTest);
     cmdAdd("load-config", loadConfigFromFile);
@@ -351,7 +343,7 @@ int main(int argc, char *argv[])
                 {
                     continue;
                 }
-                std::cerr << exc.what();
+                // std::cerr << exc.what();
             }
 
             // readString = string("CMD >>\r");
