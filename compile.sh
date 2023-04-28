@@ -5,5 +5,5 @@ cmake ..
 cd ..
 make -C build
 
-#echo "Running executable"
-#./build/rriv-cli
+echo "Running executable: ./build/rriv-cli"
+./build/rriv-cli

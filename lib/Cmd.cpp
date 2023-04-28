@@ -302,3 +302,21 @@ uint32_t cmdStr2Num(char *str, uint8_t base)
 {
     return strtol(str, NULL, base);
 }
+
+/**************************************************************************/
+/*!
+    List each command's name in the command table on a separate line
+*/
+/**************************************************************************/
+void cmdList()
+{
+    cmd_t *cmd_entry;
+    char buf[50];
+
+    // navigate the command table and print each name
+    for (cmd_entry = cmd_tbl; cmd_entry != NULL; cmd_entry = cmd_entry->next)
+    {
+        strcpy(buf, cmd_entry->cmd);
+        *outStream << buf << std::endl;
+    }
+}
